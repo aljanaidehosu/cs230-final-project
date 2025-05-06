@@ -1,10 +1,16 @@
 
-import seaborn as sns
 import streamlit as st
 import pydeck as pdk
 import pandas as pd
 import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
+import folium
+from streamlit_folium import st_folium
+import requests
+from shapely.geometry import shape, MultiPolygon
+import json
+
 # import seaborn as sns
 
 
@@ -72,6 +78,83 @@ r = pdk.Deck(
 st.pydeck_chart(r)
 # end map New York [SE1] and [ST4]
 #[PY4] A dictionary where you write code to access its keys, values, or items
+Data_Visualizations_Options = st.sidebar.selectbox(
+    "Wanted Data Visulizations",
+
+    ["None", "Map Filtered By Square Footage","NYC Borough Boundaries Map","Price Correlation by Property Feature"])
+
+if Data_Visualizations_Options == "Map Filtered By Square Footage":
+ st.header("Map Filtered By Square Footage")
+
+    # Folium map [FOLIUM 1]
+ m = folium.Map(location=[40.7128, -74.0060], zoom_start=12)
+
+ min_price = st.number_input("Enter minimum square footage", min_value=0, value=100)
+ max_price = st.number_input("Enter maximum square footage", min_value=0, value=500)
+
+ if min_price > max_price:
+     st.error("Your minimum value exceeds your maximum value")
+ filtered_df = df[(df['PROPERTYSQFT'] >= min_price) & (df['PROPERTYSQFT'] <= max_price)]
+ for idx, row in filtered_df.iterrows():
+     folium.Marker(
+         location=[row['LATITUDE'], row['LONGITUDE']],
+         popup=f"{row['ADDRESS']}: {row['PRICE']}",
+         tooltip=row['ADDRESS'],
+         icon=folium.Icon(color="blue", icon="info-sign")
+     ).add_to(m)
+ st_data = st_folium(m, width=700, height=500)
+# end of folium map [FOLIUM 1]
+elif Data_Visualizations_Options == "NYC Borough Boundaries Map":
+ st.header("NYC Borough Boundaries Map")
+# [FOLIUM 2]
+ geojson_url = "https://data.cityofnewyork.us/resource/gthc-hcne.json" # using external API to get our data
+ borough_geo = requests.get(geojson_url).json()
+
+ nyc_map = folium.Map(location=[40.7128, -74.0060], zoom_start=11)
+
+ color_map = {
+     "Manhattan": "blue",
+     "Brooklyn": "green",
+     "Staten Island": "yellow",
+     "Bronx": "black",
+     "Queens": "purple",
+ }
+
+ for borough in borough_geo:
+    borough_name = borough['boroname']
+    folium.GeoJson(
+        borough["the_geom"],
+        name=borough_name,
+        tooltip=borough_name,
+        style_function=lambda x, name=borough_name: {
+            'fillColor': 'none',
+            'color': color_map.get(name),
+            'weight': 3
+        }
+    ).add_to(nyc_map)
+
+# Add a layer control and display
+ folium.LayerControl().add_to(nyc_map)
+ st_data = st_folium(nyc_map, width=700, height=500)
+# [FOLIUM 2]
+elif Data_Visualizations_Options == "Price Correlation by Property Feature":
+ st.header("Price Correlation by Property Feature")
+
+    # Correlation chart + scatterplot
+ st.title("Scatter Plot with Linear Regression")
+ select_columns = ["BEDS", "BATH", "PROPERTYSQFT"]
+
+ x_col = st.selectbox("Select X-axis", [col for col in select_columns if col in df.columns])
+ y_col = "log_price"
+
+# Plotting
+ fig, ax = plt.subplots()
+ sns.regplot(data=df, x=x_col, y=y_col, ax=ax)
+ ax.set_title(f'{y_col} vs {x_col} with Linear Regression Line')
+
+ st.pyplot(fig)
+# end of scatterplot
+
 borough= st.selectbox("Select a Borough",list(data.keys()))
 # end [PY4] A dictionary where you write code to access its keys, values, or items
 #Code for fixed usage of.keys function is based on code from ChatGPT. See 1st section of accompanying document.
@@ -126,7 +209,7 @@ price_range = st.slider("Select Price Range", int(min_price), int(max_price), (i
 # end [ST3] Slider
 #[EXTRA] [DA5] Filter data by two or more conditions with AND or OR and [EXTRA] [DA2] Sort data in ascending or descending order, by one or more columns,
 filtered_data=borough_rows[(borough_rows['PRICE'] >= price_range[0]) & (borough_rows['PRICE'] <= price_range[1])].sort_values(by='PRICE', ascending=True)
-#end [EXTRA] [DA5] Filter data by two or more conditions with AND or OR and [EXTRA]  [DA2] Sort data in ascending or descending order, by one or more columns,
+#end [EXTRA] [DA5] Filter data by two or more conditions with AND or OR and [EXTRA] [DA2] Sort data in ascending or descending order, by one or more columns,
 
 #Code for fixed  filtered data  based on code from ChatGPT. See 3rd section of accompanying document.
 #Code for sorting chart based on code from ChatGPT. See 4th section of accompanying document.
@@ -137,7 +220,7 @@ st.dataframe(filtered_data)
 # [ST4] Customized page design features (sidebar) to choose the visualization
 chart_option = st.sidebar.selectbox(
     "📊 Choose a chart to display:",
-    ["Housing Type Distribution", "Average Price per SqFt", "Average Beds & Baths"]
+    ["None","Housing Type Distribution", "Average Price per SqFt", "Average Beds & Baths"]
 )
 # end [ST4] Customized page design features (sidebar) to choose the visualization
 
