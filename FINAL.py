@@ -1,16 +1,4 @@
-"""
-Name:        Yerasyl Abdimash,Saleem Mansoor, Alika Ali
-CS230:      Section 7
-Data:       New York Housing Market
-URL:        Link to your web application on Streamlit Cloud (if posted)
 
-Description:
-
-This program aims to utilize the New York Housing Market dataset to provide insightful information about the housing landscape across different boroughs.
-Our application will present key metrics such as the housing type distribution, average number of bedrooms and bathrooms, and the average
-price per square foot. Additionally, we will incorporate filtering options that allow users to view housing listings based on an inputted maximum and minimum prices,
- helping them explore affordability within specific boroughs.
-"""
 import seaborn as sns
 import streamlit as st
 import pydeck as pdk
