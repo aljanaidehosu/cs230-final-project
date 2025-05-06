@@ -11,7 +11,7 @@ Our application will present key metrics such as the housing type distribution, 
 price per square foot. Additionally, we will incorporate filtering options that allow users to view housing listings based on an inputted maximum and minimum prices,
  helping them explore affordability within specific boroughs.
 """
-import sns
+import seaborn as sns
 import streamlit as st
 import pydeck as pdk
 import pandas as pd
