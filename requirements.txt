@@ -1,6 +1,10 @@
-seaborn 
 streamlit
-pydeck 
-pandas 
-numpy 
+pydeck
+pandas
+numpy
+seaborn
 matplotlib
+folium
+streamlit-folium
+requests
+shapely
